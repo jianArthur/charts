@@ -1,7 +1,7 @@
-import { Chart as CJ, ChartEvent, Plugin } from 'chart.js/auto';
+import { Chart as CJ, ChartEvent as CJChartEvent, Plugin } from 'chart.js/auto';
 import { alphaColor } from '../../helpers';
 import { padToArray } from '../../helpers/utils';
-import { ChartData, ChartOptions, ChartType } from '../../types';
+import { ChartData, ChartEvent, ChartEventType, ChartOptions, ChartType, EventContext } from '../../types';
 import { Chart } from '../.internal';
 import { ScaleKeys } from './xy.types';
 
@@ -32,7 +32,7 @@ export class CategoryLabelSelectable<TChart extends Chart<ChartData, ChartOption
       afterEvent: (
         chart: CJ<ChartType.Bar | ChartType.Line>,
         event: {
-          event: ChartEvent;
+          event: CJChartEvent;
           replay: boolean;
           changed?: boolean | undefined;
           cancelable: false;
@@ -66,10 +66,19 @@ export class CategoryLabelSelectable<TChart extends Chart<ChartData, ChartOption
               } else {
                 this.selectedLabels.splice(index, 1);
               }
-              if (opts?.labelSelectable) {
-                this.setSelectedLabels(chart, opts, activeLabel);
-              } else if (typeof opts?.onLabelClick === 'function') {
-                opts.onLabelClick(activeLabel);
+
+              if (opts?.labelSelectable || typeof opts?.onLabelClick === 'function') {
+                if (opts?.labelSelectable) {
+                  this.setSelectedLabels(chart, opts, activeLabel);
+                } else if (typeof opts?.onLabelClick === 'function') {
+                  opts.onLabelClick(activeLabel);
+                }
+                const eventContext: EventContext<{ label: string | undefined; selectedLabels?: string[] }> = {
+                  chart: this.chart,
+                  data: { label: activeLabel, selectedLabels: this.selectedLabels },
+                  event: event.event,
+                };
+                this.chart.rootElement?.dispatchEvent(new ChartEvent(ChartEventType.CategoryLabelClick, eventContext));
               }
             }
           }

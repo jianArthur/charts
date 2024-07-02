@@ -544,7 +544,8 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
     dataset: ChartDataset<'line', number[]>,
     styleMapping: SeriesStyleOptions,
   ): MarkerStyle | undefined {
-    dataset.pointRadius = dataset.data.length > 1 ? 0 : 2;
+    // If pointRadius is 0, the boundary line point is not fully displayed when hovered.
+    dataset.pointRadius = dataset.data.length > 1 ? 0.01 : 2;
     dataset.pointHoverRadius = 5;
     return styleMapping.markerStyle ?? this.options.legend?.markerStyle;
   }
