@@ -272,6 +272,7 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
     tooltipEl.setStyle('left', left + 'px');
     tooltipEl.setStyle('top', top + 'px');
     tooltipEl.setStyle('z-index', this.options.zIndex);
+    tooltipEl.setStyle('line-height', '1.5');
 
     const alignKey = `${tooltip.xAlign}-${tooltip.yAlign}` as PositionDirection;
     const currentPosition = TooltipPositions[alignKey];
