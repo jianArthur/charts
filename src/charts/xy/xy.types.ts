@@ -12,6 +12,10 @@ export interface AxisOptions {
    */
   title?: string;
   /**
+   * tooltipLabel of the axis.
+   */
+  tooltipLabel?: string;
+  /**
    * Type of scale being employed. Custom scales can be created and registered with a string key. This allows changing the type of an axis for a chart.
    */
   type?: 'category' | 'time';

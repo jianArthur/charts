@@ -5,26 +5,19 @@ import { formatNumber, isNullOrUndefined, mergeObjects } from '../../helpers';
 import { DomElement, findDomElement } from '../../helpers/dom';
 import { ChartData, ChartOptions, ChartType, CJUnknownChartType } from '../../types';
 import { Chart } from '../.internal';
+import { TooltipBasic } from './tooltip-basic';
 import { TooltipPositions } from './tooltip.style';
 import { PositionDirection, TooltipItem, TooltipOptions } from './tooltip.types';
 
 const TOOLTIP_ID = `${COMPONENT_PREFIX}-tooltip`;
 const TOOLTIP_CLASS = TOOLTIP_ID;
 
-export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
-  static defaults: TooltipOptions = {
-    fontSize: '13px',
-    borderRadius: '4px',
-    padding: '0.5rem 0.75rem',
-    showTotal: false,
-    appendToBody: false,
-    zIndex: 888,
-  };
-
+export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> extends TooltipBasic {
   private options: TooltipOptions;
   private chartOptions: ChartOptions;
 
   constructor(public chart: TChart, options?: TooltipOptions) {
+    super();
     this.chartOptions = this.chart.options;
     this.options = mergeObjects(Tooltip.defaults, options || {});
   }

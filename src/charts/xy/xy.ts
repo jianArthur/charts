@@ -34,9 +34,10 @@ import {
   TableData,
 } from '../../types';
 import { Chart } from '../.internal';
+import { LabelTooltip, LegendTooltip } from '../.plugins';
 import { A11yChart } from '../.plugins/a11y/a11y-chart';
 import { A11yLegend } from '../.plugins/a11y/a11y-legend';
-import { Tooltip, TooltipItem } from '../tooltip';
+import { Tooltip, TooltipItem, TooltipLegend } from '../tooltip';
 import { BarScrollable } from './xy.bar-scrollable';
 import { CategoryLabelSelectable } from './xy.category-label-selectable';
 import {
@@ -121,6 +122,17 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
       new A11yLegend().toCJPlugin(this.getCurrentTheme()?.focusColor),
       this.segmentClickable?.toCJPlugin(),
     ];
+
+    if (this.options.legend?.tooltip?.title) {
+      const tooltip = this.getLegendTooltip().getLegendTooltip().nativeElement;
+      plugins.push(new LegendTooltip(tooltip).getLegendTooltipPlugin());
+    }
+
+    if (this.options.categoryAxis?.tooltipLabel) {
+      const tooltip = this.getLegendTooltip().getLegendTooltip().nativeElement;
+      plugins.push(new LabelTooltip(tooltip).getLabelTooltipPlugin());
+    }
+
     this.segmentClickable?.setSegmentColors(
       chartDatasets.map((dataset) => dataset.backgroundColor as string | string[]),
       chartDatasets.map((dataset) => dataset.borderColor as string | string[]),
@@ -699,6 +711,7 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
       this.options.valueAxes?.forEach((valueAxis: ValueAxisOptions, index) => {
         const valueAxisKey = this.getValueAxisAlias(index);
         const valueScale = scales[valueAxisKey];
+        ``;
         if (
           valueScale?.ticks &&
           (valueAxis.autoSkip === undefined || valueAxis.autoSkip) &&
@@ -849,6 +862,22 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
 
   private getTooltip(): Tooltip<typeof this> {
     return new Tooltip(
+      this,
+      mergeObjects(
+        {
+          useNative: false,
+          showPercentage: false,
+          combineItems: false,
+          title: (tooltip: CJTooltipModel<CJUnknownChartType>) => tooltip.title || [],
+          items: this.getTooltipItems.bind(this),
+        },
+        this.options.tooltip || {},
+      ),
+    );
+  }
+
+  private getLegendTooltip(): TooltipLegend<typeof this> {
+    return new TooltipLegend(
       this,
       mergeObjects(
         {
