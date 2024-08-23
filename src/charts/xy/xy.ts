@@ -39,6 +39,7 @@ import { A11yLegend } from '../.plugins/a11y/a11y-legend';
 import { Tooltip, TooltipItem } from '../tooltip';
 import { BarScrollable } from './xy.bar-scrollable';
 import { CategoryLabelSelectable } from './xy.category-label-selectable';
+import { CategoryLabelTooltip } from './xy.category-tooltip';
 import {
   CategoryAxisOptions,
   ScaleAxisType,
@@ -128,6 +129,9 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
     if (this.isScrollable) {
       plugins.push(zoomPlugin);
       plugins.push(new BarScrollable(this).toCJPlugin());
+    }
+    if (this.options.categoryAxis?.labelTooltip) {
+      plugins.push(new CategoryLabelTooltip(this).toCJPlugin());
     }
     if (this.isCategoryLabelSelectable()) {
       this.getCategoryLabelSelectable();

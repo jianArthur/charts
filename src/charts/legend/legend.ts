@@ -8,12 +8,16 @@ import {
   LegendOptions as CJLegendOptions,
 } from 'chart.js/auto';
 import { _DeepPartialObject } from 'chart.js/dist/types/utils';
-import { mergeObjects } from '../../helpers';
+import { DomElement, mergeObjects } from '../../helpers';
 import { ChartData, ChartEvent, ChartEventType, ChartOptions, EventContext, LegendItem, Position } from '../../types';
 import type { Chart } from '../.internal';
+import { PositionDirection } from '../tooltip';
+import { getPositionDirection, initTooltip, setPosition } from '../tooltip/tooltip.helper';
 
 export class Legend<TChart extends Chart<ChartData, ChartOptions>> {
   items: LegendItem[] = [];
+
+  private tooltipElement: DomElement | null = null;
 
   get selectedItems(): LegendItem[] {
     return this.items.filter((item) => item.selected);
@@ -120,6 +124,12 @@ export class Legend<TChart extends Chart<ChartData, ChartOptions>> {
         }
         this.chart.rootElement?.dispatchEvent(evt);
       },
+      onLeave: (_cjEvent: CJChartEvent, _cjLegendItem: CJLegendItem, _cjLegend: CJLegendElement<CJChartType>) => {
+        this.leaveLegend();
+      },
+      onHover: (_cjEvent: CJChartEvent, cjLegendItem: CJLegendItem, cjLegend: CJLegendElement<CJChartType>) => {
+        this.hoverLegend(cjLegendItem, cjLegend);
+      },
     };
   }
 
@@ -216,5 +226,43 @@ export class Legend<TChart extends Chart<ChartData, ChartOptions>> {
     }
 
     return false;
+  }
+
+  private hoverLegend(cjLegendItem: CJLegendItem, cjLegend: CJLegendElement<CJChartType>): void {
+    const chart = cjLegend.chart;
+    const parentElement = chart.canvas.parentElement;
+    const tooltipOptions = this.chart.options.legend?.tooltip;
+    if (tooltipOptions && parentElement && cjLegend?.legendItems) {
+      const index = cjLegend.legendItems.findIndex((item) => item.text === cjLegendItem.text);
+      if (index === -1) {
+        return;
+      }
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
+      const { left, top, width, height } = chart.legend.legendHitBoxes[index];
+      let tooltipLeft = left;
+      let tooltipTop = top;
+      const tooltipEl = initTooltip(tooltipOptions, this.chart.getCurrentTheme(), chart, cjLegendItem);
+      const alignKey = getPositionDirection(cjLegend.position as Position);
+      if (alignKey === PositionDirection.RightCenter) {
+        tooltipLeft = left;
+        tooltipTop = top + height / 2;
+      } else if (alignKey === PositionDirection.CenterBottom) {
+        tooltipLeft = left + width / 2;
+        tooltipTop = top;
+      } else if (alignKey === PositionDirection.LeftCenter) {
+        tooltipLeft = left + width;
+        tooltipTop = top + height / 2;
+      } else if (alignKey === PositionDirection.CenterTop) {
+        tooltipLeft = left + width / 2;
+        tooltipTop = top + height;
+      }
+      setPosition(alignKey, tooltipEl, tooltipLeft, tooltipTop, this.chart.getCurrentTheme());
+      this.tooltipElement = tooltipEl;
+    }
+  }
+
+  private leaveLegend(): void {
+    this.tooltipElement?.setStyle('opacity', 0);
   }
 }

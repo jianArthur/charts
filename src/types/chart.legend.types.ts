@@ -1,4 +1,4 @@
-import type { TooltipOptions } from '../charts/tooltip';
+import type { TooltipBaseOptions } from '../charts/tooltip';
 import type { ChartEvent } from './chart.event.types';
 import type { MarkerStyle, Position } from './chart.types';
 import type { Font } from './font.types';
@@ -19,7 +19,7 @@ export interface LegendOptions {
   position?: Position;
   reverse?: boolean;
   markerStyle?: MarkerStyle;
-  tooltip?: TooltipOptions;
+  tooltip?: TooltipBaseOptions;
   states?: {
     setSelected?: (item: LegendItem) => void;
     setUnSelected?: (item: LegendItem) => void;
