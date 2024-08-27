@@ -210,16 +210,13 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
       left = position.left + window.scrollX;
       top = position.top + window.scrollY;
     }
-    const styles = getComputedStyle(context.chart.canvas.parentElement);
-    const parentElementPaddingTop = styles.paddingTop;
-    const parentElementPaddingLeft = styles.paddingLeft;
-    left += tooltip.caretX + parseFloat(parentElementPaddingLeft);
-    top += tooltip.caretY + parseFloat(parentElementPaddingTop);
+    left += tooltip.caretX;
+    top += tooltip.caretY;
     // display, position, and set styles
     tooltipEl.setStyle('z-index', this.options.zIndex);
     tooltipEl.setStyle('line-height', '1.5');
     const alignKey = `${tooltip.xAlign}-${tooltip.yAlign}` as PositionDirection;
-    setPosition(alignKey, tooltipEl, left, top, this.chart.getCurrentTheme());
+    setPosition(alignKey, tooltipEl, left, top, this.chart.getCurrentTheme(), context.chart);
   }
 
   private generateHtmlForIcon(tooltipItem: TooltipItem): DomElement {

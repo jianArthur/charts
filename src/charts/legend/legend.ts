@@ -257,7 +257,7 @@ export class Legend<TChart extends Chart<ChartData, ChartOptions>> {
         tooltipLeft = left + width / 2;
         tooltipTop = top + height;
       }
-      setPosition(alignKey, tooltipEl, tooltipLeft, tooltipTop, this.chart.getCurrentTheme());
+      setPosition(alignKey, tooltipEl, tooltipLeft, tooltipTop, this.chart.getCurrentTheme(), chart);
       this.tooltipElement = tooltipEl;
     }
   }

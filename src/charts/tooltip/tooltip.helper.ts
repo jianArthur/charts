@@ -161,6 +161,7 @@ export function setPosition(
   left: number,
   top: number,
   theme: Theme,
+  chart?: any,
 ): void {
   const arrowEl = findDomElement(`.${TOOLTIP_CLASS}-arrow`, tooltipEl.nativeElement);
   const currentPosition = TooltipPositions[alignKey];
@@ -183,6 +184,13 @@ export function setPosition(
     tooltipEl.setStyle('transform', currentPosition.transform);
   } else {
     tooltipEl.addClass('no-transform');
+  }
+  if (chart?.canvas?.parentElement) {
+    const styles = getComputedStyle(chart.canvas.parentElement);
+    const parentElementPaddingTop = styles.paddingTop;
+    const parentElementPaddingLeft = styles.paddingLeft;
+    left = left + parseFloat(parentElementPaddingLeft);
+    top = top + parseFloat(parentElementPaddingTop);
   }
   tooltipEl.setStyle('left', left + 'px');
   tooltipEl.setStyle('top', top + 'px');
