@@ -5,7 +5,7 @@ import {
 } from 'chart.js/auto';
 import { getFontStyleAbbreviation } from '../../core';
 import { deepClone, mergeObjects } from '../../helpers';
-import { ChartType, Position } from '../../types';
+import { ChartType, Font, Position } from '../../types';
 import { PieChart } from '../pie';
 import { CenterLabel, DonutChartOptions, DonutData } from './donut.type';
 
@@ -87,19 +87,14 @@ export class DonutChart extends PieChart<DonutData, DonutChartOptions> {
         // ignore items after second one
         return;
       }
-
-      if (!label.font) {
-        label.font = {};
-      }
-
       const cjFont = this.getCJFont(label.font || {}, {
         size: index === 0 ? 36 : 14,
       });
-      if (cjFont.size) {
+      if (!label.font && cjFont.size) {
         cjFont.size = cjFont.size * scaleNum;
       }
       // required as the following offset will use the size.
-      label.font.size = cjFont.size;
+      label.font = cjFont as Font;
 
       let topOffset = 0;
       if (centerLabels.length > 1 && centerLabels[0]?.font?.size) {

@@ -1,32 +1,25 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { CoreInteractionOptions as CJCoreInteractionOptions, TooltipModel as CJTooltipModel } from 'chart.js/auto';
-import { COMPONENT_PREFIX } from '../../core';
 import { formatNumber, isNullOrUndefined, mergeObjects } from '../../helpers';
-import { DomElement, findDomElement } from '../../helpers/dom';
+import { DomElement } from '../../helpers/dom';
 import { ChartData, ChartOptions, ChartType, CJUnknownChartType } from '../../types';
 import { Chart } from '../.internal';
-import { TooltipPositions } from './tooltip.style';
+import {
+  defaultTooltipOptions,
+  getTooltipContainer,
+  getTooltipElement,
+  setPosition,
+  TOOLTIP_CLASS,
+} from './tooltip.helper';
 import { PositionDirection, TooltipItem, TooltipOptions } from './tooltip.types';
 
-const TOOLTIP_ID = `${COMPONENT_PREFIX}-tooltip`;
-const TOOLTIP_CLASS = TOOLTIP_ID;
-
 export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
-  static defaults: TooltipOptions = {
-    fontSize: '13px',
-    borderRadius: '4px',
-    padding: '0.5rem 0.75rem',
-    showTotal: false,
-    appendToBody: false,
-    zIndex: 888,
-  };
-
   private options: TooltipOptions;
   private chartOptions: ChartOptions;
 
   constructor(public chart: TChart, options?: TooltipOptions) {
     this.chartOptions = this.chart.options;
-    this.options = mergeObjects(Tooltip.defaults, options || {});
+    this.options = mergeObjects(defaultTooltipOptions, options || {});
   }
 
   toCJPlugin(): any {
@@ -59,32 +52,8 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
   generateTooltipHtml(context: any) {
     // Tooltip Element
     const { chart, tooltip } = context;
-    let tooltipEl: DomElement | null;
-    if (this.options.appendToBody) {
-      tooltipEl = findDomElement(`#${TOOLTIP_ID}`);
-    } else {
-      tooltipEl = findDomElement(`.${TOOLTIP_ID}`, chart.canvas.parentElement);
-    }
-
+    const tooltipEl = getTooltipElement(this.options, chart.canvas.parentElement);
     const chartType = chart.config.type;
-    // Create element on first render
-    if (!tooltipEl) {
-      tooltipEl = new DomElement('div')
-        .addClass(`${TOOLTIP_CLASS}`)
-        .setStyle('opacity', 0)
-        .setStyle('pointer-events', 'none')
-        .setStyle('position', 'absolute')
-        .setStyle('transition', 'all .1s ease');
-      if (this.options.appendToBody) {
-        tooltipEl.setAttribute('id', TOOLTIP_ID).appendToBody();
-      } else {
-        // below will append the tooltip element to container, but it may be cut by container.
-        tooltipEl.appendTo(chart.canvas.parentNode as HTMLElement);
-      }
-      if (this.options.maxWidth) {
-        tooltipEl.setStyle('max-width', this.options.maxWidth);
-      }
-    }
 
     // Hide if no tooltip
     if (tooltip.opacity === 0) {
@@ -92,17 +61,7 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
       return;
     }
 
-    // clear content
-    tooltipEl.clearChildren();
-
-    const tooltipContainer = new DomElement('div')
-      .addClass(`${TOOLTIP_CLASS}-container`)
-      .setStyle('border-radius', this.options.borderRadius)
-      .setStyle('padding', this.options.padding)
-      .setStyle('font-size', this.options.fontSize)
-      .setStyle('background-color', this.chart.getCurrentTheme()?.tooltipBackgroundColor)
-      .setStyle('color', this.chart.getCurrentTheme()?.tooltipTextColor);
-
+    const tooltipContainer = getTooltipContainer(this.options, this.chart.getCurrentTheme());
     // title
     let titles: string[] = [];
     if (this.options?.title) {
@@ -111,7 +70,7 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
       } else if (Array.isArray(this.options.title)) {
         titles = this.options.title;
       } else if (typeof this.options.title === 'function') {
-        const titleFnResult = this.options.title(tooltip);
+        const titleFnResult = this.options.title(chart, tooltip);
         if (typeof titleFnResult === 'string') {
           titles = [titleFnResult];
         } else if (Array.isArray(titleFnResult)) {
@@ -222,7 +181,7 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
       } else if (Array.isArray(this.options.footer)) {
         footers = this.options.footer;
       } else if (typeof this.options.footer === 'function') {
-        const footerFnResult = this.options.footer(chart);
+        const footerFnResult = this.options.footer(chart, tooltip);
         if (typeof footerFnResult === 'string') {
           footers = [footerFnResult];
         } else if (Array.isArray(footerFnResult)) {
@@ -238,61 +197,26 @@ export class Tooltip<TChart extends Chart<ChartData, ChartOptions>> {
         footerEl.newChild('div').setHtml(text);
       });
     }
-
-    const arrowEl = new DomElement('div')
-      .addClass(`${TOOLTIP_CLASS}-arrow`)
-      .setStyle('position', 'absolute')
-      .setStyle('border-style', 'solid')
-      .setStyle('border-color', 'transparent')
-      .setStyle('border-width', '6px');
-
-    this.setPosition(context, tooltip, arrowEl, tooltipEl);
-
-    // add arrow and container for tooltip
-    tooltipEl.addChild(arrowEl);
     tooltipEl.addChild(tooltipContainer);
+    this.setPosition(context, tooltip, tooltipEl);
   }
 
   // set the position of the tooltip dynamically
-  private setPosition(context: any, tooltip: any, arrowEl: DomElement, tooltipEl: DomElement): void {
-    let left = '';
-    let top = '';
+  private setPosition(context: any, tooltip: any, tooltipEl: DomElement): void {
+    let left = 0;
+    let top = 0;
     if (this.options.appendToBody) {
       const position = context.chart.canvas.getBoundingClientRect();
-      left = position.left + window.scrollX + tooltip.caretX + 'px';
-      top = position.top + window.scrollY + tooltip.caretY + 'px';
-    } else {
-      left = tooltip.caretX + 'px';
-      top = tooltip.caretY + 'px';
+      left = position.left + window.scrollX;
+      top = position.top + window.scrollY;
     }
+    left += tooltip.caretX;
+    top += tooltip.caretY;
     // display, position, and set styles
-    tooltipEl.setStyle('opacity', '1');
-    tooltipEl.setStyle('left', left);
-    tooltipEl.setStyle('top', top);
     tooltipEl.setStyle('z-index', this.options.zIndex);
-
+    tooltipEl.setStyle('line-height', '1.5');
     const alignKey = `${tooltip.xAlign}-${tooltip.yAlign}` as PositionDirection;
-    const currentPosition = TooltipPositions[alignKey];
-    // Remove caret position
-    Object.values(PositionDirection).forEach((direction) => {
-      tooltipEl.removeClass(direction);
-    });
-    if (currentPosition) {
-      // Set caret position
-      tooltipEl.addClass(alignKey);
-      if (currentPosition.arrow) {
-        Object.entries(TooltipPositions[alignKey].arrow as { [key: string]: string }).forEach(([key, value]) => {
-          if (key === 'borderDirection') {
-            arrowEl.setStyle('border-' + value + '-color', this.chart.getCurrentTheme()?.tooltipBackgroundColor);
-          } else {
-            arrowEl.setStyle(key, value);
-          }
-        });
-      }
-      tooltipEl.setStyle('transform', currentPosition.transform);
-    } else {
-      tooltipEl.addClass('no-transform');
-    }
+    setPosition(alignKey, tooltipEl, left, top, this.chart.getCurrentTheme(), context.chart);
   }
 
   private generateHtmlForIcon(tooltipItem: TooltipItem): DomElement {

@@ -6,7 +6,8 @@ export enum ChartEventType {
   LegendItemClick = 'legendItemClick',
   LegendItemSelect = 'legendItemSelect',
   LegendItemUnselect = 'legendItemUnselect',
-  SegmentItemClick = 'SegmentItemClick',
+  CategoryLabelClick = 'categoryLabelClick',
+  SegmentItemClick = 'segmentItemClick',
   ThemeChange = 'themeChange',
   WordClick = 'wordClick',
   Wheel = 'wheel',
@@ -26,12 +27,11 @@ export class ChartEvent<TData> extends Event {
   constructor(name: ChartEventType, public context?: EventContext<TData>, options?: EventInit) {
     super(
       name,
-      options ||
-        {
-          // bubbles: true,
-          // cancelable: true,
-          // composed: true,
-        },
+      options || {
+        bubbles: true,
+        cancelable: true,
+        composed: true,
+      },
     );
   }
 

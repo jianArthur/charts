@@ -124,10 +124,10 @@ const getConfig = (app) => (
         id: 'api',
         entryPoints: ['../src/index.ts'],
         tsconfig: '../tsconfig.json',
-        out: 'api',
-        watch: process.env.TYPEDOC_WATCH,
+        // watch: process.env.TYPEDOC_WATCH,  // sometimes that caused the loop compilation
         // you can add typedoc options here
-        readme: 'none',
+        // https://typedoc-plugin-markdown.org/docs/options/file-options#--mergereadme
+        readme: 'none', // exclude README.md
       }],
       (context, options) => {
         return {

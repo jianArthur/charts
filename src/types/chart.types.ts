@@ -93,3 +93,17 @@ export enum Position {
   Bottom = 'bottom',
   Center = 'center',
 }
+
+export interface HitBox {
+  left: number;
+  top: number;
+  width: number;
+  height: number;
+  text: string;
+  index: number;
+  rect: { x: number; x2: number; y: number; y2: number };
+}
+export interface HitBoxSizes {
+  widths: number[];
+  heights: number[];
+}

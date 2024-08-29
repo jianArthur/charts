@@ -82,7 +82,7 @@ export default {
 function copyDistToWebsite() {
   return {
 		name: 'copyDistToWebsite',
-		writeBundle() {
+		closeBundle() {
       const dtw = './website/static/dist-lib/';
 			console.log('copying dist to website...');
       sh.rm('-rf', dtw);
