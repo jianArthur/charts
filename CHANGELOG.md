@@ -1,3 +1,19 @@
+# [1.0.0-alpha.21](https://github.com/momentum-design/charts/compare/v1.0.0-alpha.20...v1.0.0-alpha.21) (2024-08-29)
+
+
+### Bug Fixes
+
+* **donut:** adjust font usage order of center label ([#84](https://github.com/momentum-design/charts/issues/84)) ([ac9991e](https://github.com/momentum-design/charts/commit/ac9991e327c8fd363005ecf78b117d942f575942))
+* **tooltip:** inaccurate position when parent element has padding ([#87](https://github.com/momentum-design/charts/issues/87)) ([34e17d3](https://github.com/momentum-design/charts/commit/34e17d32d51477e1af809d8a58ef04b4e87a808f))
+* **tooltip:** padding of the parent element causes positioning errors ([#81](https://github.com/momentum-design/charts/issues/81)) ([c552101](https://github.com/momentum-design/charts/commit/c5521013420156a0cc14aaeeb4412f3219d7b5db))
+* **tooltip:** set line height of tooltip ([#83](https://github.com/momentum-design/charts/issues/83)) ([7789b8e](https://github.com/momentum-design/charts/commit/7789b8e578eeb771d669200d5a15db48cc524ca7))
+
+
+### Features
+
+* **tooltip:** add tooltips to category labels and legends ([#85](https://github.com/momentum-design/charts/issues/85)) ([62beb58](https://github.com/momentum-design/charts/commit/62beb5858104fbf223da874a4a99da57bbe4c205))
+* **xy:** add click event for category label ([#82](https://github.com/momentum-design/charts/issues/82)) ([52a0d2f](https://github.com/momentum-design/charts/commit/52a0d2f10ce023b05504b29d556350ca080850f7))
+
 # [1.0.0-alpha.20](https://github.com/momentum-design/charts/compare/v1.0.0-alpha.19...v1.0.0-alpha.20) (2024-06-07)
 
 
