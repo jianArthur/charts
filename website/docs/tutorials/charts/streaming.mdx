@@ -1,0 +1,100 @@
+---
+sidebar_position: 106
+---
+
+# Streaming Chart
+
+Streaming chart is support show live data, use 'pushData' function to append the new data to the chart
+
+```jsx live noInline
+let lastDateTime = '2023-09-01';
+
+const data = [
+  {
+    dateTime: '2023-9-01',
+    Florida: 1,
+    Nevada: 2,
+    Wyoming: 3,
+    Arkansas: 4,
+  },
+];
+const initialOptions = {
+  categoryAxis: {
+    gridDisplay: true,
+    dataKey: 'dateTime',
+    type: 'time',
+    timeUnit: 'month',
+    labelFormat: 'MM/YYYY',
+    maxCategories: 12,
+  },
+  valueAxes: [
+    {
+      gridDisplay: true,
+      position: 'left',
+    },
+  ],
+  seriesOptions: {
+    styleMapping: {
+      Florida: {
+        order: 1,
+      },
+    },
+  },
+};
+const Example = () =>
+  getExample(initialOptions, data, ({ key, data, options, setOptions }) => {
+    const Buttons = () => (
+      <>
+        <Button
+          onClick={() => {
+            const myComponent = document.querySelector('md-chart');
+            const pushData = {};
+            let date = new Date(lastDateTime);
+            date.setMonth(date.getMonth() + 1);
+            const updatedDate = date.toISOString().slice(0, 10);
+            pushData.dateTime = updatedDate;
+            pushData.Florida = Math.floor(Math.random() * 10);
+            pushData.Nevada = Math.floor(Math.random() * 10);
+            pushData.Wyoming = Math.floor(Math.random() * 10);
+            pushData.Arkansas = Math.floor(Math.random() * 10);
+            pushData.test = Math.floor(Math.random() * 10);
+            lastDateTime = updatedDate;
+            myComponent.pushData([pushData]);
+          }}
+        >
+          Start Push Data
+        </Button>
+      </>
+    );
+
+    return (
+      <WithActions buttons={<Buttons />}>
+        <md-chart key={key} type="line" data={JSON.stringify(data)} options={JSON.stringify(options)}></md-chart>
+      </WithActions>
+    );
+  });
+
+render(<Example />);
+```
+
+## Type
+
+type = 'line'
+
+## Data
+
+See [Data](./bar#data)
+
+## Options
+
+See [Options](./bar#options)
+
+### SeriesOptions
+
+#### styleMapping
+
+| Name      | Type      | Default | Description                                                                                                                                                                                                                                        |
+| --------- | --------- | ------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| lineWidth | `number`  | 1       | The line width (in pixels).                                                                                                                                                                                                                        |
+| fillGaps  | `boolean` |         | If true, lines will be drawn between points with no or null data. If false, points with NaN data will create a break in the line. Can also be a number specifying the maximum gap length to span. The unit of the value depends on the scale used. |
+| tension   | `number`  |         | Bezier curve tension (0 means no bezier curve).                                                                                                                                                                                                    |

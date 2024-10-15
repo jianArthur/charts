@@ -45,7 +45,7 @@ export class PieChart<TData extends PieData, TOptions extends PieChartOptions> e
       name: undefined,
       labels: undefined,
     },
-    series: [],
+    datasets: [],
   };
 
   private currentChartOptions: ChartOptions | undefined;
@@ -104,11 +104,11 @@ export class PieChart<TData extends PieData, TOptions extends PieChartOptions> e
 
   private getDatasets(): ChartDataset<CJType, number[]>[] {
     const chartDataset: ChartDataset<CJType, number[]>[] = [];
-    if (Array.isArray(this.chartData?.series)) {
+    if (Array.isArray(this.chartData?.datasets)) {
       const chartBG = this.getColorsForKeys(this.chartData?.category?.labels as string[]);
-      this.chartData?.series?.forEach((series) => {
+      this.chartData?.datasets?.forEach((datasetItem) => {
         let dataset: ChartDataset<CJType, number[]> = { data: [] };
-        dataset = this.getChartDataset(series, chartBG);
+        dataset = this.getChartDataset(datasetItem, chartBG);
         if (dataset) {
           chartDataset.push(dataset);
         }
@@ -202,18 +202,18 @@ export class PieChart<TData extends PieData, TOptions extends PieChartOptions> e
         name: '',
         labels: [],
       },
-      series: [],
+      datasets: [],
     };
 
     result.category.labels = Object.keys(data.data[0]).filter((key) => key !== data.dataKey);
     const seriesData = data.data.map((_data) => {
       return {
-        name: data.dataKey ? (_data[data.dataKey] as string) : '',
+        label: data.dataKey ? (_data[data.dataKey] as string) : '',
         data: result.category.labels?.map((key) => _data[key as string]) as number[],
       };
     });
 
-    result.series = seriesData;
+    result.datasets = seriesData;
 
     return result;
   }

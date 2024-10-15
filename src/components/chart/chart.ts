@@ -72,7 +72,6 @@ export class ChartComponent<TData extends ChartData, TOptions extends ChartOptio
 
   @property({ attribute: 'data-url', type: String })
   dataUrl?: string;
-
   /**
    * The options for current chat.
    */
@@ -178,6 +177,12 @@ export class ChartComponent<TData extends ChartData, TOptions extends ChartOptio
 
     if (this.chart) {
       this.chart.destroy();
+    }
+  }
+
+  public pushData(pushData: TData): void {
+    if (this.chart?.updatePushData) {
+      this.chart?.updatePushData(pushData);
     }
   }
 

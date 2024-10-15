@@ -20,7 +20,7 @@ export class RangeChart extends XYChart {
       index: number;
     },
   ): ChartDataset<'line', number[]> {
-    if (this.chartData?.series && options.index === this.chartData.series.length - 1) {
+    if (this.chartData?.datasets && options.index === this.chartData.datasets.length - 1) {
       dataset.fill = {
         below: fadeColor(options.color) as Color,
         above: fadeColor(options.color) as Color,

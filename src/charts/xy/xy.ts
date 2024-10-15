@@ -86,7 +86,7 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
       name: undefined,
       labels: undefined,
     },
-    series: [],
+    datasets: [],
   };
 
   private hiddenDatasets: { label?: string; borderColor?: Color; backgroundColor?: Color }[] = [];
@@ -99,12 +99,13 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
   private defaultCategoryTickHeightForX = 30;
   private defaultTitleHeightOrWidth = 30;
   private defaultLegendHeightForX = 60;
+  private defaultMaxCategories = 12;
   private isScrollbarDragging = false;
   private startPointClientY = 0;
   private isScrollable = false;
   private labelsCount = 0;
   private labelSizePerPage = 0;
-
+  private colorList: string[] = [];
   private categoryLabelSelectable?: CategoryLabelSelectable<typeof this>;
 
   protected getConfiguration(): ChartConfiguration {
@@ -163,6 +164,19 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
     };
   }
 
+  updatePushData(pushData: XYData) {
+    const genericData = this.transformGenericData(pushData);
+    const chartData = this.genericToDataView(genericData);
+
+    if (this.api) {
+      this.handleMissingDatasetsData(chartData);
+      this.handelDatesetData(chartData);
+      this.handelChartLabels(chartData);
+      this.handelInvalidDataset();
+      this.update();
+    }
+  }
+
   protected onThemeChanging(): void {
     if (this.api?.options) {
       this.api.options = this.getChartOptions();
@@ -190,10 +204,66 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
     }
   }
 
+  private handleMissingDatasetsData(chartData: ChartDataView): void {
+    this.api?.data.datasets.forEach((dataset) => {
+      if (!chartData.datasets.some((datasetData) => dataset.label === datasetData.label)) {
+        const labelsLength = this.api?.data?.labels?.length || 0;
+        const spliceIndex = labelsLength - this.defaultMaxCategories + 1;
+        dataset.data.splice(0, spliceIndex);
+        const datasetData = new Array(labelsLength).fill(null);
+        dataset.data.push(...datasetData);
+      }
+    });
+  }
+
+  private handelDatesetData(chartData: ChartDataView): void {
+    chartData.datasets.forEach((chartDataset) => {
+      const label = chartDataset.label;
+      const dataset = this.api?.data.datasets.find((dataset) => {
+        return label === dataset.label;
+      });
+      if (dataset) {
+        const spliceIndex = dataset.data.length - this.defaultMaxCategories + 1;
+        dataset.data.splice(0, spliceIndex);
+        dataset.data.push(...(chartDataset.data || []));
+      } else {
+        const labelsLength = this.api?.data?.labels?.length;
+        let datasetData = new Array(labelsLength).fill(null);
+        datasetData = datasetData.concat(chartDataset.data || []);
+        const colors = this.getColorsForKeys([chartDataset.label]);
+        this.colorList = this.colorList.concat(colors);
+        const newDataset = this.createChartDataset(chartDataset, this.colorList, this.colorList.length - 1);
+        newDataset.data = datasetData;
+        this.api?.data.datasets.push(newDataset);
+        chartDataset.data = datasetData;
+      }
+    });
+  }
+
+  private handelChartLabels(chartData: ChartDataView): void {
+    if (this.api?.data?.labels?.length) {
+      const spliceIndex = this.api.data.labels.length - this.defaultMaxCategories + 1;
+      this.api?.data?.labels?.splice(0, spliceIndex);
+    }
+    this.api?.data.labels?.push(...(chartData.category.labels || []));
+  }
+
+  private handelInvalidDataset() {
+    const indicesToRemove: number[] = [];
+    this.api?.data.datasets.forEach((dataset, index) => {
+      if (dataset.data.every((data) => data === null)) {
+        indicesToRemove.push(index);
+      }
+    });
+    for (let i = indicesToRemove.length - 1; i >= 0; i--) {
+      this.api?.data.datasets.splice(indicesToRemove[i], 1);
+    }
+  }
+
   private getChartOptions(): CJOptions {
     this.options.legend = this.options.legend || {};
     if (this.options.legend.display === undefined || this.options.legend.display) {
-      this.options.legend.display = !(this.options.categoryAxis?.enableColor && this.chartData?.series.length <= 1);
+      this.options.legend.display = !(this.options.categoryAxis?.enableColor && this.chartData?.datasets.length <= 1);
     }
     this.options.legend.states = {
       setItemInactiveStyle: (legendItem): void => {
@@ -210,6 +280,11 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
       responsive: true,
       indexAxis: this.getIndexAxis(),
       interaction: tooltip.toCJInteraction(this.isHorizontal()),
+      animation: {
+        duration: 500,
+        easing: 'easeInOutQuad',
+        loop: false,
+      },
       plugins: {
         title: {
           display: !!this.options.title,
@@ -461,17 +536,16 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
     if (!this.chartData.category.labels) {
       throw new Error('Categories cannot be undefined.');
     }
-    if (Array.isArray(this.chartData?.series)) {
-      let colors: string[] = [];
+    if (Array.isArray(this.chartData?.datasets)) {
       if (this.options.categoryAxis?.enableColor) {
-        colors = this.getColorsForKeys(this.chartData.category.labels);
+        this.colorList = this.getColorsForKeys(this.chartData.category.labels);
       } else {
-        colors = this.getColorsForKeys(this.chartData?.series.map((series) => series.name));
+        this.colorList = this.getColorsForKeys(this.chartData?.datasets.map((series) => series.label));
       }
 
-      this.chartData?.series?.forEach((series, index) => {
+      this.chartData?.datasets?.forEach((series, index) => {
         let dataset: ChartDataset<CJType, number[]> = { data: [] };
-        dataset = this.createChartDataset(series, colors, index);
+        dataset = this.createChartDataset(series, this.colorList, index);
         if (dataset) {
           chartDataset.push(dataset);
         }
@@ -481,17 +555,17 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
   }
 
   protected createChartDataset(
-    series: {
-      name: string;
+    datasets: {
+      label: string;
       data?: (number | null)[];
     },
     colors: string[],
     index: number,
   ): ChartDataset<CJType, number[]> {
     let dataset: ChartDataset<CJType, number[]> = { data: [] };
-    const styleMapping = this.options.seriesOptions?.styleMapping?.[series.name] ?? {};
-    dataset.data = Object.values(series.data ?? []) as number[];
-    dataset.label = series.name;
+    const styleMapping = this.options.seriesOptions?.styleMapping?.[datasets.label] ?? {};
+    dataset.data = Object.values(datasets.data ?? []) as number[];
+    dataset.label = datasets.label;
     dataset.borderColor = this.options.categoryAxis?.enableColor ? colors : colors[index];
     dataset.backgroundColor = this.options.categoryAxis?.enableColor ? colors : colors[index];
     dataset.type = convertToCJType(styleMapping?.type ?? this.options.seriesOptions?.type ?? this.getType());
@@ -585,7 +659,7 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
         name: data.dataKey ?? '',
         labels: [],
       },
-      series: [],
+      datasets: [],
     };
     if (!data?.dataKey) {
       return result;
@@ -594,12 +668,12 @@ export abstract class XYChart extends Chart<XYData, XYChartOptions> {
     const seriesNames = this.getCombinedKeys(data.data).filter((key) => key !== data.dataKey);
     const seriesData = seriesNames.map((name) => {
       return {
-        name: name,
+        label: name,
         data: data.data.map((item) => (item[name] as number) ?? null),
       };
     });
 
-    result.series = seriesData;
+    result.datasets = seriesData;
     return result;
   }
 

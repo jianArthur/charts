@@ -59,8 +59,8 @@ export interface GenericDataModel {
  */
 export type ChartDataView = {
   category: { name?: string; labels?: string[] };
-  series: {
-    name: string;
+  datasets: {
+    label: string;
     data?: (number | null)[];
   }[];
 };

@@ -231,8 +231,8 @@ export abstract class Chart<TData extends ChartData, TOptions extends ChartOptio
   removeCustomEventListener?(): void;
   getCategoryLabelSelectable?(): CategoryLabelSelectable<typeof this>;
   calculateMaxLimitTicks?(options: CJOptions): void;
-
   protected onThemeChanging(): void {}
+  updatePushData?(pushData: any): void;
 }
 
 export type TypedChart = typeof Chart<ChartData, ChartOptions>;

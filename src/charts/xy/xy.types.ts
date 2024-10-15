@@ -97,6 +97,10 @@ export interface CategoryAxisOptions extends AxisOptions {
    */
   maxLabels?: number;
   /**
+   * The maximum number of Categories displayed in Streaming chart.
+   */
+  maxCategories?: number;
+  /**
    * The supported type is category, but time is not supported.
    */
   labelSelectable?: boolean;
@@ -196,6 +200,7 @@ export interface XYChartOptions extends ChartOptions {
  * The "DataTableLike" type can be a two-dimensional array (unknown[][]) or an array of objects (Record<string, string | number>[]).
  */
 export type XYData = TableData | JsonData;
+export type PushData = TableData | JsonData;
 export enum ScaleKeys {
   CategoryAxis = 'categoryAxis',
   ValueAxis = 'valueAxis',
